@@ -15,6 +15,7 @@ Jack is 256/3 and I have a limiter in PD (64 samples delay) -> ninjam.
 Use Audacity or similar to validate the sync (routing ninjam to audacity (left) and your daw or sampler (right)).
 
 ** OSC receive
+For now only receiving /metronome/mute OSC message on port 9000 check in main() for lo::ServerThread st(9000);
 
 // MASTER 
 g_client->config_mastervolume = (float)lp.gettoken_float(n+1);
