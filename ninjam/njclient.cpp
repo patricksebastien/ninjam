@@ -31,8 +31,16 @@
 #include "../WDL/pcmfmtcvt.h"
 #include "../WDL/wavwrite.h"
 #include "../WDL/wdlcstring.h"
-
 #include "../WDL/win32_utf8.h"
+
+// HACK
+#include <lo/lo.h>
+#include <lo/lo_cpp.h>
+lo::Address oscc("localhost", "8000");
+int useNegativeTiming = 1;
+int sampleAccurateTiming = 1786;
+int lastmBPM = 0;
+int mBPMChanged = 1;
 
 #define NJ_ENCODER_FMT_TYPE MAKE_NJ_FOURCC('O','G','G','v')
 
@@ -818,10 +826,24 @@ void NJClient::AudioProc(float **inbuf, int innch, float **outbuf, int outnch, i
     }
 
     if (x > len) x=len;
-
+    
     process_samples(inbuf,innch,outbuf,outnch,x,srate,offs,0,isPlaying,isSeek,cursessionpos);
 
     m_interval_pos+=x;
+/*
+    oscc.send("len", "i",len);
+    oscc.send("m_interval_length", "i",m_interval_length);
+    oscc.send("m_interval_pos", "i",m_interval_pos);
+    oscc.send("m_active_bpm", "i",m_active_bpm);
+    oscc.send("m_active_bpi", "i",m_active_bpi);
+    oscc.send("m_metronome_interval", "i",m_metronome_interval);
+*/
+    // HACK
+    if(lastmBPM != m_active_bpm) {
+      oscc.send("/tempo/raw", "f", (float)m_active_bpm);
+      lastmBPM = m_active_bpm;
+      mBPMChanged = 1;
+    }
     offs += x;
     len -= x;    
 
@@ -1912,6 +1934,19 @@ void NJClient::process_samples(float **inbuf, int innch, float **outbuf, int out
     }
     for (x = 0; x < len; x ++)
     {
+      // HACK
+      if(useNegativeTiming) {
+        if(((m_interval_pos+x) == (m_interval_length - sampleAccurateTiming)) && mBPMChanged){
+          oscc.send("/restart");
+          mBPMChanged = 0;
+        }
+      } else {
+        if(((m_interval_pos+x) == sampleAccurateTiming) && mBPMChanged){
+          oscc.send("/restart");
+          mBPMChanged = 0;
+        }
+      }
+
       if (m_metronome_pos <= 0.0)
       {
         m_metronome_state=1;
@@ -1925,8 +1960,11 @@ void NJClient::process_samples(float **inbuf, int innch, float **outbuf, int out
         if (um)
         {
           double val=0.0;
-          if (!m_metronome_tmp) val = sin((double)m_metronome_state*sc*2.0) * 0.25;
-          else val = sin((double)m_metronome_state*sc);
+          if (!m_metronome_tmp) {
+            val = sin((double)m_metronome_state*sc*2.0) * 0.25;
+          } else {
+            val = sin((double)m_metronome_state*sc);
+          }
 
           ptr1[x]+=(float)(val*vol1);
           if (ptr2) ptr2[x]+=(float)(val*vol2);
