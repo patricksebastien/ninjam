@@ -49,6 +49,9 @@
 
 #include "../njmisc.h"
 
+// HACK
+#include <lo/lo.h>
+#include <lo/lo_cpp.h>
 
 #define VALIDATE_TEXT_CHAR(thischar) ((isspace(thischar) || isgraph(thischar)) && (thischar) < 256)
 #ifdef _WIN32
@@ -958,6 +961,21 @@ int licensecallback(void *userData, const char *licensetext)
 
 int main(int argc, char **argv)
 {
+  // HACK
+  lo::ServerThread st(9000);
+  if (!st.is_valid()) {
+      printf("Error creating OSC server on port 9000");
+      return 1;
+  }
+
+  st.add_method("/metronome/mute", "i", [](lo_arg **argv, int) {
+    g_client->config_metronome_mute = argv[0]->i;
+  });
+
+  st.start();
+
+
+
   char *parmuser=NULL;
   char *parmpass=NULL;
   WDL_String sessiondir;

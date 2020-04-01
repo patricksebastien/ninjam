@@ -1,7 +1,70 @@
 Fork of NINJAM, www.ninjam.com to add Open Sound Control.
+
+** OSC send
 For now only as a client sending 2 commands:
 - /restart (controlled by a sample accurate trigger)
 - /bpm (when changed)
 
 Super hackish, you need to compile it (I am using the cursesclient) to change the value (njclient.cpp).
 It works for me...
+
+My magic number is:
+int sampleAccurateTiming = 4408;
+
+Jack is 256/3 and I have a limiter in PD (64 samples delay) -> ninjam.
+Use Audacity or similar to validate the sync (routing ninjam to audacity (left) and your daw or sampler (right)).
+
+** OSC receive
+
+// MASTER 
+g_client->config_mastervolume = (float)lp.gettoken_float(n+1);
+g_client->config_masterpan = (float)lp.gettoken_float(n+1);
+g_client->config_metronome = (float)lp.gettoken_float(n+1);
+g_client->config_metronome_pan = (float)lp.gettoken_float(n+1);
+g_client->config_mastermute = !!lp.gettoken_int(n+1);
+g_client->config_metronome_mute = !!lp.gettoken_int(n+1);
+
+// LOCAL (me)
+//name
+g_client->SetLocalChannelInfo(ch,lp.gettoken_str(n+1),false,false,false,0,false,false); g_client->SetLocalChannelInfo(ch,NULL,true,lp.gettoken_int(n+1),false,0,false,false);
+//broadcast
+g_client->SetLocalChannelInfo(ch,NULL,false,false,false,0,true,!!lp.gettoken_int(n+1));
+g_client->SetLocalChannelMonitoring(ch,false,false,false,false,true,!!lp.gettoken_int(n+1),false,false);
+//solo
+g_client->SetLocalChannelMonitoring(ch,false,false,false,false,false,false,true,!!lp.gettoken_int(n+1));
+//volume
+g_client->SetLocalChannelMonitoring(ch,true,(float)lp.gettoken_float(n+1),false,false,false,false,false,false);
+//pan
+g_client->SetLocalChannelMonitoring(ch,false,false,true,(float)lp.gettoken_float(n+1),false,false,false,false);
+
+
+// REMOTE
+int a=g_client->EnumUserChannels(user,x);
+if (a < 0)
+{
+    x=0;
+    user++;
+    continue;
+}
+
+float vol,pan;
+bool sub,mute;
+char *name=g_client->GetUserChannelState(user,a,&sub,&vol,&pan,&mute);
+// show channel info
+
+if (action && g_sel_ycat == selcat && g_sel_ypos == selpos)
+{
+    if (g_sel_x == 0)
+    {
+    // toggle subscribe
+    g_client->SetUserChannelState(user,a,true,sub=!sub,false,0.0f,false,0.0f,false,false,false,false);
+    }
+    else if (g_sel_x == 1)
+    {
+    // toggle mute
+    g_client->SetUserChannelState(user,a,false,false,false,0.0f,false,0.0f,true,mute=!mute,false,false);
+    }
+
+g_client->SetUserChannelState((g_ui_voltweakstate_channel-1024)/64,g_ui_voltweakstate_channel%64, false,false,false,0.0f,true,pan,false,false,false,false);
+else
+g_client->SetLocalChannelMonitoring(g_ui_voltweakstate_channel,false,0.0f,true,pan,false,false,false,false);
