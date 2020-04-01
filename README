@@ -1,1 +1,7 @@
-This is NINJAM, www.ninjam.com
+Fork of NINJAM, www.ninjam.com to add Open Sound Control.
+For now only as a client sending 2 commands:
+- /restart (controlled by a sample accurate trigger)
+- /bpm (when changed)
+
+Super hackish, you need to compile it (I am using the cursesclient) to change the value (njclient.cpp).
+It works for me...
