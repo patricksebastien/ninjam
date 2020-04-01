@@ -10,7 +10,7 @@ ifdef MAC
   OBJS += ../audiostream_mac.o
   COMPILE_VORBIS = 1
 else
-  LFLAGS = -lncurses -lm -lasound -ljack
+  LFLAGS = -lncurses -lm -lasound -ljack -llo
   OBJS += ../audiostream_alsa.o ../audiostream_jack.o
 endif
 
