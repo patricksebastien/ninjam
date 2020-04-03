@@ -972,6 +972,11 @@ int main(int argc, char **argv)
     g_client->config_metronome_mute = argv[0]->i;
   });
 
+  st.add_method("/local/emit", "i", [](lo_arg **argv, int) {
+    g_client->SetLocalChannelInfo(0,NULL,false,false,false,0,true,argv[0]->i);
+    g_client->SetLocalChannelInfo(1,NULL,false,false,false,0,true,argv[0]->i);
+  });
+
   st.start();
 
 
@@ -1672,11 +1677,13 @@ int main(int argc, char **argv)
                   vol=(float) DB2VAL(vol);
                   if (g_ui_voltweakstate_channel == -2) g_client->config_mastervolume=vol;
                   else if (g_ui_voltweakstate_channel == -1) g_client->config_metronome=vol;
-                  else if (g_ui_voltweakstate_channel>=1024)
+                  else if (g_ui_voltweakstate_channel>=1024) {
                     g_client->SetUserChannelState((g_ui_voltweakstate_channel-1024)/64,g_ui_voltweakstate_channel%64, false,false,true,vol,false,0.0f,false,false,false,false);
-                  else
+                    printf("---%i |", g_ui_voltweakstate_channel);
+                  } else {
                     g_client->SetLocalChannelMonitoring(g_ui_voltweakstate_channel,true,vol,false,0.0f,false,false,false,false);
-                  showmainview();
+                }
+                showmainview();
                 }
               }
             break;
