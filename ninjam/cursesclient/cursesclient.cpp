@@ -962,9 +962,9 @@ int licensecallback(void *userData, const char *licensetext)
 int main(int argc, char **argv)
 {
   // HACK
-  lo::ServerThread st(9000);
+  lo::ServerThread st(9001);
   if (!st.is_valid()) {
-      printf("Error creating OSC server on port 9000");
+      printf("Error creating OSC server on port 9001");
       return 1;
   }
 
@@ -1201,6 +1201,9 @@ int main(int argc, char **argv)
               {
                 switch (lp.gettoken_enum(n,"source\0bc\0mute\0solo\0volume\0pan\0jesus\0name\0"))
                 {
+                  //master mastervol 1.000000 masterpan 0.000000 metrovol 0.500000 metropan 0.000000 mastermute 0 metromute 0
+                  //local 0 source 0 bc 1 mute 0 solo 0 volume 1.000000 pan 0.000000 jesus 0 name `channel0`
+                  //SetLocalChannelInfo(int ch, const char *name, bool setsrcch, int srcch, bool setbitrate, int bitrate, bool setbcast, bool broadcast, bool setoutch, int outch, bool setflags, int flags)
                   case 0: // source 
                     g_client->SetLocalChannelInfo(ch,NULL,true,lp.gettoken_int(n+1),false,0,false,false);
                   break;

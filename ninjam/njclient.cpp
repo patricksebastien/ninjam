@@ -38,7 +38,7 @@
 #include <lo/lo_cpp.h>
 lo::Address oscc("localhost", "8000");
 int useNegativeTiming = 1;
-int sampleAccurateTiming = 4408;
+int sampleAccurateTiming = 4406;
 int lastmBPM = 0;
 int mBPMChanged = 1;
 
